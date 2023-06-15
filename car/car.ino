@@ -16,8 +16,8 @@
 #define EN_LEFT 5
 #define SERVO 10
 #define LOOK_FORWARD 105
-#define LOOK_RIGHT 35
-#define LOOK_LEFT 170
+#define LOOK_RIGHT 30
+#define LOOK_LEFT 180
 #define MAX_SPEED 255
 
 enum Turn {
@@ -79,28 +79,23 @@ void loop() {
     forward();
   } else {
     stop(SHORT_TIME);
-    // rotateTillNoObstacle();
+    rotateTillNoObstacle();
   }
 }
 
 void rotateTillNoObstacle() {
   smoothlyLookLeft();
-  bool leftFree = !obstacleTooClose();
+  int distanceLeft = measureDistance();
   smoothlyLookRight();
-  bool rightFree = !obstacleTooClose();
+  int distanceRight = measureDistance();
   smoothlyLookForward();
 
-  if(leftFree && rightFree) {
-    chooseRandomlyWhereToGo();
-  } else if(leftFree && !rightFree) {
-    left90Degrees();
-  } else if(rightFree && !leftFree) {
-    right90Degrees();
+  if(distanceLeft > distanceRight) {
+    left();
   } else {
-    backward(LONG_TIME);
-    chooseRandomlyWhereToGo();
+    right();
   }
-  targetAngle = measureAngle();
+  // targetAngle = measureAngle();
 }
 
 bool obstacleTooClose() {
