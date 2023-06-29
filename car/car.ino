@@ -62,7 +62,7 @@ void setup() {
   // mpu6050.begin();
   // mpu6050.calcGyroOffsets(true);
   servo.write(watch);
-  // targetAngle = measureAngle();
+  targetAngle = measureAngle();
   // Serial.begin(9600);
 }
 
@@ -90,10 +90,12 @@ void rotateTillNoObstacle() {
   int distanceRight = measureDistance();
   smoothlyLookForward();
 
-  if(distanceLeft > distanceRight) {
-    left();
+  if(distanceLeft > THRESHOLD) {
+    left(SHORT_TIME);
+  } else if(distanceRight > THRESHOLD) {
+    right(SHORT_TIME);
   } else {
-    right();
+    backward(SHORT_TIME);
   }
   // targetAngle = measureAngle();
 }
@@ -116,6 +118,7 @@ int measureDistance() {
 
   int duration = pulseIn(ECHO, HIGH);
   return duration * 0.034 / 2;
+  delay(50);
 }
 
 // float measureAngularSpeed() {
