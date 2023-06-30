@@ -2,44 +2,47 @@
 
 int posizione;
 int direzione;
-int step_motore_indietro = 1;
-int step_motore_avanti = 10;
+int step_motore_indietro = 5;
+int step_motore_avanti = 5;
 
 void setup() {
-  // put your setup code here, to run once:
+  Serial.begin(9600);
   pinMode(SERVO, OUTPUT);
   posizione = 100;
   direzione = 1;
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  // analogWrite(SERVO, posizione);
+  // turnServo();
 
-  // delay(10);
+  // Set a specific posiiton:
+  setPrecisePosition();
+}
 
-  // if(direzione == 1) {
-  //   posizione += step_motore_avanti;
-  //   if(posizione > 255) {
-  //     direzione = 0;
-  //   }
-  // } else {
-  //   posizione -= step_motore_indietro;
-  //   if(posizione < 10) {
-  //     direzione = 1;
-  //   }
-  // }
+void turnServo() {
+  analogWrite(SERVO, posizione);
+  Serial.println(posizione);
 
-  // delay
-  analogWrite(SERVO, 70);
+  delay(50);
 
-  delay(1000);
+  if(direzione == 1) {
+    posizione += step_motore_avanti;
+    if(posizione > 245) {
+      direzione = 0;
+    }
+  } else {
+    posizione -= step_motore_indietro;
+    if(posizione < 10) {
+      direzione = 1;
+    }
+  }
+}
 
-  analogWrite(SERVO, 200);
+void setPrecisePosition() {
+  String setPos = Serial.readString();
 
-  delay(1000);
-
-  analogWrite(SERVO, 250);
-
-  delay(1000);
+  if(setPos.toInt() != 0) {
+    Serial.println(setPos);
+    analogWrite(SERVO, setPos.toInt());
+  }
 }

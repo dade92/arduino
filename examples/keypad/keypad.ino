@@ -1,7 +1,7 @@
 #include <Keypad.h>
 #define LED_ERROR 4
-#define LED_SUCCESS 3
-#define SOUND 13
+#define LED_SUCCESS 2
+#define SOUND 3
 
 const String VERY_STRONG_PIN = "666D";
 
@@ -32,7 +32,7 @@ void setup() {
 void loop() {
   char key = kpd.getKey();
   digitalWrite(SOUND, LOW);
-  
+
   if(millis() - lastDigitTime > RESET_TIME) {
     Serial.println("resetting pin");
     pin = "";
