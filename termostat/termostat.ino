@@ -17,17 +17,15 @@
 **/
 #include <LiquidCrystal.h>
 #include <SimpleDHT.h>
-
 #define DHTPIN 7
 
+SimpleDHT11 dht11;
 const int rs = 8, en = 9, d4 = 10, d5 = 11, d6 = 12, d7 = 13;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-
-SimpleDHT11 dht11;
-
-void printOnLCD(int, int);
 long lastMeasureTime = 0, timestamp;
 byte temp, umid;
+
+void printOnLCD(int, int);
 
 void setup() {
   lcd.begin(16, 2);
