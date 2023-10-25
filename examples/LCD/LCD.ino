@@ -1,6 +1,5 @@
-/*
-sketch base che scrive un messaggio
-*/
+// Use 2Kh resistor to see something good on the screen!
+
 #include <LiquidCrystal.h>
 
 const int rs = 12, en = 11, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
