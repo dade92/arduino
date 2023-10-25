@@ -2,7 +2,7 @@
 
 #include <LiquidCrystal.h>
 
-const int rs = 12, en = 11, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
+const int rs = 8, en = 9, d4 = 10, d5 = 11, d6 = 12, d7 = 13;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 void setup() {
