@@ -12,7 +12,7 @@
     Rw to ground
     E to pin 9
     d4 d5 d6 d7 to 10 11 12 13
-    A to Vcc    (these last two are for retro light)
+    A to pin 6
     K to ground
 
   REAL TIME CLOCK
@@ -20,6 +20,10 @@
     SCL to SCL
     Vcc to Vcc
     GND to ground
+  BUTTON
+    S to pin 2
+    GND to ground
+    Vcc to Vcc
 **/
 #include <LiquidCrystal.h>
 #include <SimpleDHT.h>
