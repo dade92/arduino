@@ -27,15 +27,22 @@
 #include <RTClib.h>
 
 #define DHTPIN 7
+#define LIGHT 6
+#define BUTTON 2
+#define INPUT_THRESHOLD 250
+#define MAX_LIGHT_ON 3000
 
 SimpleDHT11 dht11;
 const int rs = 8, en = 9, d4 = 10, d5 = 11, d6 = 12, d7 = 13;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-long lastMeasureTime = 0, timestamp;
+long lastMeasureTime = 0, timestamp, lastChange;
 byte temp, umid;
 RTC_DS1307 rtc;
+uint8_t light = LOW;
+uint8_t button = HIGH;
 
 void printOnLCD(int, int);
+void changeLight();
 
 void setup() {
   lcd.begin(16, 2);
@@ -46,16 +53,31 @@ void setup() {
   if(!rtc.isrunning()) {
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
   }
+
+  pinMode(LIGHT, OUTPUT);
+  pinMode(BUTTON, INPUT);
 }
 
 void loop() {
   timestamp = millis();
+
+  if(light == HIGH && (timestamp - lastChange > MAX_LIGHT_ON)) {
+    changeLight();
+  }
 
   if(timestamp - lastMeasureTime > 1000) {
     dht11.read(DHTPIN, &temp, &umid, NULL);
     DateTime now = rtc.now();
     printOnLCD((int) temp, (int)umid, now);
     lastMeasureTime = timestamp;
+  }
+
+  if(timestamp - lastChange >= INPUT_THRESHOLD) {
+    button = digitalRead(BUTTON);
+    if(button == LOW) {
+      changeLight();
+      lastChange = timestamp;
+    }
   }
 }
 
@@ -79,8 +101,6 @@ void printOnLCD(int t, int h, DateTime now) {
 
   lcd.setCursor(cursor, 0);
   if(hour < 10) {
-    lcd.print("0");
-    cursor++;
     lcd.print(hour);
     cursor++;
   } else {
@@ -106,4 +126,13 @@ void printOnLCD(int t, int h, DateTime now) {
   } else {
     lcd.print("AM");
   }
+}
+
+void changeLight() {
+  if(light == LOW) {
+    light = HIGH;
+  } else {
+    light = LOW;
+  }
+  digitalWrite(LIGHT, light);
 }
