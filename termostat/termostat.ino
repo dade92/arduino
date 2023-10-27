@@ -34,7 +34,8 @@
 #define LIGHT 6
 #define BUTTON 2
 #define INPUT_THRESHOLD 250
-#define MAX_LIGHT_ON 3000
+#define MAX_LIGHT_ON 5000
+#define MEASURE_TIME 1000
 
 SimpleDHT11 dht11;
 const int rs = 8, en = 9, d4 = 10, d5 = 11, d6 = 12, d7 = 13;
@@ -69,13 +70,15 @@ void loop() {
     changeLight();
   }
 
-  if(timestamp - lastMeasureTime > 1000) {
+  //Update LCD
+  if(timestamp - lastMeasureTime > MEASURE_TIME) {
     dht11.read(DHTPIN, &temp, &umid, NULL);
     DateTime now = rtc.now();
     printOnLCD((int) temp, (int)umid, now);
     lastMeasureTime = timestamp;
   }
 
+  // light up the screen on button pressed
   if(timestamp - lastChange >= INPUT_THRESHOLD) {
     button = digitalRead(BUTTON);
     if(button == LOW) {
