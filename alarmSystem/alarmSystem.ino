@@ -11,7 +11,7 @@
     left pin ground
     right pin Vcc
 
-    USAGE MODE: single mode with low delay. With this settings, delay is 9s
+    USAGE MODE: repetable mode with low delay. With this settings, delay is around 9s
 **/
 
 #define ALARM_SENSOR 2
@@ -19,22 +19,21 @@
 #define ALARM_DURATION 1000
 
 uint8_t alarm;
+bool active = true;
 long timestamp, lastAlarm;
 
 
 void setup() {
-  // Serial.begin(9600);
   pinMode(ALARM_SENSOR, INPUT);
   pinMode(ALARM, OUTPUT);
-  delay(1000);  //For PIR sensor to set up
+  delay(3000);  //For PIR sensor to set up
 }
 
 void loop() {
   timestamp = millis();
   alarm = digitalRead(ALARM_SENSOR);
-  // Serial.print("Alarm status:");
-  // Serial.println(alarm);
-  if(alarm == HIGH) {
+
+  if(active && alarm == HIGH) {
     lastAlarm = timestamp;
     tone(ALARM, 440 ,ALARM_DURATION);
   } else {
