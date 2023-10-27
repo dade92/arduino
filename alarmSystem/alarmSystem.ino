@@ -18,6 +18,8 @@
 #define ALARM_SENSOR 2
 #define ALARM 13
 #define ALARM_DURATION 1000
+#define KEY_DURATION 300
+#define PASSWORD "1234"
 
 uint8_t alarm;
 bool active = false;
@@ -30,10 +32,11 @@ char keys[ROWS][COLS] = {
   {'7', '8', '9', 'C'},
   {'*', '0', '#', 'D'}
 };
-byte rowPins[ROWS] = { 12, 11, 10, 9 };
-byte colPins[COLS] = { 8, 7, 6, 5 };
+byte rowPins[ROWS] = { 5, 6, 7, 8 };
+byte colPins[COLS] = { 9, 10, 11, 12 };
 Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 char key;
+String pin = "";
 
 void setup() {
   pinMode(ALARM_SENSOR, INPUT);
@@ -49,11 +52,28 @@ void loop() {
 
   if(key) {
     Serial.println(key);
+    pin = pin + key;
+    tone(ALARM, 440, KEY_DURATION);
+    delay(200);
+  }
+
+  if(pin.equals(PASSWORD)) {
+    active = !active;
+    Serial.println("Password OK");
+    pin = "";
+  } else {
+      if(pin.length() == 4) {
+        pin = "";
+        tone(ALARM, 440, KEY_DURATION);
+        delay(200);
+        tone(ALARM, 440, KEY_DURATION);
+        delay(200);
+    }
   }
 
   if(active && alarm == HIGH) {
     lastAlarm = timestamp;
-    tone(ALARM, 440 ,ALARM_DURATION);
+    tone(ALARM, 440, ALARM_DURATION);
   } else {
     noTone(ALARM);
   }
