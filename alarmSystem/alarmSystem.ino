@@ -13,25 +13,43 @@
 
     USAGE MODE: repetable mode with low delay. With this settings, delay is around 9s
 **/
+#include <Keypad.h>
 
 #define ALARM_SENSOR 2
 #define ALARM 13
 #define ALARM_DURATION 1000
 
 uint8_t alarm;
-bool active = true;
+bool active = false;
 long timestamp, lastAlarm;
-
+const byte ROWS = 4;
+const byte COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
+};
+byte rowPins[ROWS] = { 12, 11, 10, 9 };
+byte colPins[COLS] = { 8, 7, 6, 5 };
+Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
+char key;
 
 void setup() {
   pinMode(ALARM_SENSOR, INPUT);
   pinMode(ALARM, OUTPUT);
   delay(3000);  //For PIR sensor to set up
+  Serial.begin(9600);
 }
 
 void loop() {
   timestamp = millis();
   alarm = digitalRead(ALARM_SENSOR);
+  key = kpd.getKey();
+
+  if(key) {
+    Serial.println(key);
+  }
 
   if(active && alarm == HIGH) {
     lastAlarm = timestamp;
