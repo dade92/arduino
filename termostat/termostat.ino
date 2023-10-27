@@ -1,11 +1,10 @@
 /**
   HUM SENSOR
-    S pin to pin 7
+    S to to pin 7
     middle pin to Vcc
     right pin to ground
-
   LCD
-    Vss to ground
+    Vss not connected (don't know exactly why)
     Vdd to Vcc
     V0 to ground with 2KH resistor
     Rs to pin 8
@@ -14,12 +13,11 @@
     d4 d5 d6 d7 to 10 11 12 13
     A to pin 6
     K to ground
-
   REAL TIME CLOCK
-    SDA to SDA
-    SCL to SCL
+    SDA and SCL to SDA and SCL respectively
     Vcc to Vcc
     GND to ground
+    Other pins are useless
   BUTTON
     S to pin 2
     GND to ground
