@@ -15,14 +15,18 @@
 **/
 #include <Keypad.h>
 
+#define RELE 1
 #define ALARM_SENSOR 2
 #define ALARM 13
 #define ALARM_DURATION 1000
-#define KEY_DURATION 300
+#define KEY_DURATION 200
 #define PASSWORD "1234"
+#define GREEN_LIGHT 3
+#define RED_LIGHT 4
 
-uint8_t alarm;
+uint8_t personDetected;
 bool active = false;
+bool alarm = false;
 long timestamp, lastAlarm;
 const byte ROWS = 4;
 const byte COLS = 4;
@@ -38,20 +42,37 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 char key;
 String pin = "";
 
+void waitForSensorCalibration() {
+  delay(3000);
+}
+void setLedLight() {
+  if(active) {
+    digitalWrite(RED_LIGHT, HIGH);
+    digitalWrite(GREEN_LIGHT, LOW);
+  } else {
+    digitalWrite(RED_LIGHT, LOW);
+    digitalWrite(GREEN_LIGHT, HIGH);
+  }
+}
+
 void setup() {
   pinMode(ALARM_SENSOR, INPUT);
   pinMode(ALARM, OUTPUT);
-  delay(3000);  //For PIR sensor to set up
-  Serial.begin(9600);
+  pinMode(GREEN_LIGHT, OUTPUT);
+  pinMode(RED_LIGHT, OUTPUT);
+  pinMode(RELE, OUTPUT);
+  digitalWrite(RELE, LOW);
+  waitForSensorCalibration();
+  setLedLight();
 }
 
 void loop() {
   timestamp = millis();
-  alarm = digitalRead(ALARM_SENSOR);
+
+  personDetected = digitalRead(ALARM_SENSOR);
   key = kpd.getKey();
 
   if(key) {
-    Serial.println(key);
     pin = pin + key;
     tone(ALARM, 440, KEY_DURATION);
     delay(200);
@@ -59,8 +80,14 @@ void loop() {
 
   if(pin.equals(PASSWORD)) {
     active = !active;
-    Serial.println("Password OK");
     pin = "";
+    setLedLight();
+    if(alarm) {
+      //reset the status
+      noTone(ALARM);
+      digitalWrite(RELE, LOW);
+      alarm = !alarm;
+    }
   } else {
       if(pin.length() == 4) {
         pin = "";
@@ -71,11 +98,13 @@ void loop() {
     }
   }
 
-  if(active && alarm == HIGH) {
-    lastAlarm = timestamp;
+  if(alarm) {
+    digitalWrite(RELE, HIGH);
     tone(ALARM, 440, ALARM_DURATION);
-  } else {
-    noTone(ALARM);
+  }
+
+  if(active && personDetected == HIGH) {
+    alarm = true;
   }
 }
 
