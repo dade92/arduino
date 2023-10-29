@@ -34,7 +34,7 @@
 **/
 #include <Keypad.h>
 
-#define RELE 1
+#define RELE A5
 #define ALARM_SENSOR 2
 #define ALARM_SOUND A0
 #define ALARM_DURATION 1000
