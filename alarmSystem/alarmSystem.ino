@@ -12,10 +12,28 @@
     right pin Vcc
 
     USAGE MODE: repetable mode with low delay. With this settings, delay is around 9s
+
+  PASSIVE BUZZER
+    right pin is signal
+    middle pin Vcc
+    left pin ground
+
+  RELAY
+    right pin ground
+    middle pin Vcc
+    left pin signal
+  
+  LED
+    right pin ground
+    R pin is green (WRONG PIN ON THE CHIP)
+    G pin is red (WRONG PIN ON THE CHIP)
+
+  KEYPAD
+    from left to right, pins from 5 to 12
 **/
 #include <Keypad.h>
 
-#define RELE 1
+#define RELE A5
 #define ALARM_SENSOR 2
 #define ALARM 13
 #define ALARM_DURATION 1000
@@ -45,6 +63,7 @@ String pin = "";
 void waitForSensorCalibration() {
   delay(3000);
 }
+
 void setLedLight() {
   if(active) {
     digitalWrite(RED_LIGHT, HIGH);
