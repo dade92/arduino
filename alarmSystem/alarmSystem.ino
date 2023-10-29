@@ -22,6 +22,7 @@
     right pin ground
     middle pin Vcc
     left pin signal
+    IMPORTANT: for this project I used the analog A5 pin as digital pin
   
   LED
     right pin ground
@@ -35,9 +36,10 @@
 
 #define RELE A5
 #define ALARM_SENSOR 2
-#define ALARM 13
+#define ALARM_SOUND 13
 #define ALARM_DURATION 1000
 #define KEY_DURATION 200
+#define KEY_STORED_TIME 5000
 #define PASSWORD "1234"
 #define GREEN_LIGHT 3
 #define RED_LIGHT 4
@@ -45,7 +47,7 @@
 uint8_t personDetected;
 bool active = false;
 bool alarm = false;
-long timestamp, lastAlarm;
+long timestamp, lastAlarm, lastKeyPressed;
 const byte ROWS = 4;
 const byte COLS = 4;
 char keys[ROWS][COLS] = {
@@ -57,7 +59,7 @@ char keys[ROWS][COLS] = {
 byte rowPins[ROWS] = { 5, 6, 7, 8 };
 byte colPins[COLS] = { 9, 10, 11, 12 };
 Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
-char key;
+char keyPressed;
 String pin = "";
 
 void waitForSensorCalibration() {
@@ -74,9 +76,57 @@ void setLedLight() {
   }
 }
 
+void resetPin() {
+  pin = "";
+}
+
+void sound() {
+  tone(ALARM_SOUND, 440, KEY_DURATION);
+  delay(200);
+}
+
+bool personIsDetected() {
+  return active && !alarm && personDetected == HIGH;
+}
+
+void handleAlarm() {
+  if(personIsDetected()) {
+    alarm = true;
+  }
+  if(alarm) {
+    digitalWrite(RELE, HIGH);
+    tone(ALARM_SOUND, 440, ALARM_DURATION); //This is used as alarm but in the future relay will be enough
+  }
+}
+
+void handleUserInput() {
+  if(keyPressed) {
+    pin = pin + keyPressed;
+    sound();
+    lastKeyPressed = timestamp;
+  }
+
+  if(pin.equals(PASSWORD)) {
+    active = !active;
+    resetPin();
+    setLedLight();
+    if(alarm) {
+      noTone(ALARM_SOUND);
+      digitalWrite(RELE, LOW);
+      alarm = !alarm;
+    }
+  } else {
+      if(pin.length() == 4) {
+        resetPin();
+        sound();
+        sound();
+    }
+  }
+}
+
 void setup() {
   pinMode(ALARM_SENSOR, INPUT);
-  pinMode(ALARM, OUTPUT);
+  pinMode(ALARM_SOUND, OUTPUT);
   pinMode(GREEN_LIGHT, OUTPUT);
   pinMode(RED_LIGHT, OUTPUT);
   pinMode(RELE, OUTPUT);
@@ -89,62 +139,14 @@ void loop() {
   timestamp = millis();
 
   personDetected = digitalRead(ALARM_SENSOR);
-  key = kpd.getKey();
+  keyPressed = kpd.getKey();
 
-  if(key) {
-    pin = pin + key;
-    tone(ALARM, 440, KEY_DURATION);
-    delay(200);
-  }
+  handleAlarm();
+  handleUserInput();
 
-  if(pin.equals(PASSWORD)) {
-    active = !active;
-    pin = "";
-    setLedLight();
-    if(alarm) {
-      //reset the status
-      noTone(ALARM);
-      digitalWrite(RELE, LOW);
-      alarm = !alarm;
-    }
-  } else {
-      if(pin.length() == 4) {
-        pin = "";
-        tone(ALARM, 440, KEY_DURATION);
-        delay(200);
-        tone(ALARM, 440, KEY_DURATION);
-        delay(200);
-    }
-  }
-
-  if(alarm) {
-    digitalWrite(RELE, HIGH);
-    tone(ALARM, 440, ALARM_DURATION);
-  }
-
-  if(active && personDetected == HIGH) {
-    alarm = true;
+  if(pin.length() > 0 && (timestamp - lastKeyPressed > KEY_STORED_TIME)) {
+    resetPin();
+    sound();
+    sound();
   }
 }
-
-
-/**
-EXAMPLE SKETCH FOR TESTING
-#define ALARM_SENSOR 2
-
-
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600);
-  pinMode(ALARM_SENSOR, INPUT);
-}
-uint8_t alarm;
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  alarm = digitalRead(ALARM_SENSOR);
-  Serial.print("Alarm status:");
-  Serial.println(alarm);
-  delay(1000);
-}
-**/
