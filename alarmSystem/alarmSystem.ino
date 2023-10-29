@@ -62,6 +62,41 @@ Keypad kpd = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 char keyPressed;
 String pin = "";
 
+void handleUserInput();
+void waitForSensorCalibration();
+void setLedLight();
+void resetPin();
+void sound();
+bool personIsDetected();
+void handleAlarm();
+
+void setup() {
+  pinMode(ALARM_SENSOR, INPUT);
+  pinMode(ALARM_SOUND, OUTPUT);
+  pinMode(GREEN_LIGHT, OUTPUT);
+  pinMode(RED_LIGHT, OUTPUT);
+  pinMode(RELE, OUTPUT);
+  digitalWrite(RELE, LOW);
+  waitForSensorCalibration();
+  setLedLight();
+}
+
+void loop() {
+  timestamp = millis();
+
+  personDetected = digitalRead(ALARM_SENSOR);
+  keyPressed = kpd.getKey();
+
+  handleAlarm();
+  handleUserInput();
+
+  if(pin.length() > 0 && (timestamp - lastKeyPressed > KEY_STORED_TIME)) {
+    resetPin();
+    sound();
+    sound();
+  }
+}
+
 void waitForSensorCalibration() {
   delay(3000);
 }
@@ -121,32 +156,5 @@ void handleUserInput() {
         sound();
         sound();
     }
-  }
-}
-
-void setup() {
-  pinMode(ALARM_SENSOR, INPUT);
-  pinMode(ALARM_SOUND, OUTPUT);
-  pinMode(GREEN_LIGHT, OUTPUT);
-  pinMode(RED_LIGHT, OUTPUT);
-  pinMode(RELE, OUTPUT);
-  digitalWrite(RELE, LOW);
-  waitForSensorCalibration();
-  setLedLight();
-}
-
-void loop() {
-  timestamp = millis();
-
-  personDetected = digitalRead(ALARM_SENSOR);
-  keyPressed = kpd.getKey();
-
-  handleAlarm();
-  handleUserInput();
-
-  if(pin.length() > 0 && (timestamp - lastKeyPressed > KEY_STORED_TIME)) {
-    resetPin();
-    sound();
-    sound();
   }
 }
