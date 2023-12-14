@@ -19,8 +19,8 @@
 #include "WiFiS3.h"
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
-char ssid[] = "";        // your network SSID (name)
-char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
+char pass[] = "06989642165939857128";    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;            // your network key index number (needed only for WEP)
 
 int status = WL_IDLE_STATUS;
@@ -29,11 +29,14 @@ int status = WL_IDLE_STATUS;
 WiFiClient client;
 
 // server address:
-char server[] = "example.org";
-//IPAddress server(64,131,82,241);
+char server[] = "davides-mbp";
+// IPAddress server(192, 168, 178, 21);
 
 unsigned long lastConnectionTime = 0;            // last time you connected to the server, in milliseconds
 const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
+
+void performGET();
+void performPOST();
 
 /* -------------------------------------------------------------------------- */
 void setup() {
@@ -43,6 +46,7 @@ void setup() {
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
+  randomSeed(analogRead(0));
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -85,9 +89,8 @@ void read_request() {
     received_data_num++;
     if(received_data_num % 80 == 0) { 
       
-    }
-    
-  }  
+    } 
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -114,15 +117,44 @@ void httpRequest() {
   // This will free the socket on the NINA module
   client.stop();
 
-  // if there's a successful connection:
-  if (client.connect(server, 80)) {
+  // performGET();
+
+  performPOST();
+}
+
+void performGET() {
+    // if there's a successful connection:
+  if (client.connect(server, 8080)) {
     Serial.println("connecting...");
     // send the HTTP GET request:
-    client.println("GET / HTTP/1.1");
+    client.println("GET /findUser?name=Francesca HTTP/1.1");
     client.println("Host: example.org");
     client.println("User-Agent: ArduinoWiFi/1.1");
     client.println("Connection: close");
     client.println();
+    // note the time that the connection was made:
+    lastConnectionTime = millis();
+  } else {
+    // if you couldn't make a connection:
+    Serial.println("connection failed");
+  }
+}
+
+void performPOST() {
+    String requestBody = "{\"number\":" + String(random(300)) + "}";
+
+  // if there's a successful connection:
+  if (client.connect(server, 8080)) {
+    Serial.println("connecting...");
+    // send the HTTP POST request:
+    client.println("POST /arduino/test HTTP/1.1");
+    client.println("Content-Type: application/json;charset=UTF-8");
+    client.println("User-Agent: ArduinoWiFi/1.1");
+    client.println("Connection: close");
+    client.print("Content-Length: ");
+    client.println(requestBody.length());
+    client.println();
+    client.println(requestBody);
     // note the time that the connection was made:
     lastConnectionTime = millis();
   } else {
