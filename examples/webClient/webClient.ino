@@ -21,7 +21,6 @@
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
 char pass[] = "06989642165939857128";    // your network password (use for WPA, or use as key for WEP)
-int keyIndex = 0;            // your network key index number (needed only for WEP)
 
 int status = WL_IDLE_STATUS;
 
@@ -36,7 +35,7 @@ unsigned long lastConnectionTime = 0;            // last time you connected to t
 const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
 
 void performGET();
-void performPOST();
+void performPOST(int param);
 
 /* -------------------------------------------------------------------------- */
 void setup() {
@@ -119,7 +118,7 @@ void httpRequest() {
 
   // performGET();
 
-  performPOST();
+  performPOST(random(300));
 }
 
 void performGET() {
@@ -140,8 +139,8 @@ void performGET() {
   }
 }
 
-void performPOST() {
-    String requestBody = "{\"number\":" + String(random(300)) + "}";
+void performPOST(int param) {
+    String requestBody = "{\"number\":" + String(param) + "}";
 
   // if there's a successful connection:
   if (client.connect(server, 8080)) {
