@@ -14,11 +14,17 @@ char server[] = "davides-mbp";
 
 unsigned long lastConnectionTime = 0;
 const unsigned long postingInterval = 10L * 1000L;
+unsigned long lastBlink = 0;
+const int blinkTime = 500;
+int led =  LED_BUILTIN;
+bool ledStatus = false;
 
 void httpRequest();
 void performGET();
 void performPOST(int param);
 // IMPORTANT: these read method are the same, only thing different are the json fields to be retrieved
+// This code seems to work even in case of long responses by the server, as you
+// can see by the continuing blinking led
 void read_GET_response();
 void read_POST_response();
 
@@ -35,6 +41,7 @@ void read_POST_response();
   // DynamicJsonDocument doc();
 
 void setup() {
+  pinMode(led, OUTPUT);
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
   while (!Serial) {
@@ -78,6 +85,12 @@ void loop() {
   
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
+  }
+
+  if(millis() - lastBlink > blinkTime) {
+    ledStatus = !ledStatus;
+    digitalWrite(led, ledStatus);
+    lastBlink = millis();
   }
 
 }
