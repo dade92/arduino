@@ -1,8 +1,8 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
 
-char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
-char pass[] = "";        // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "FRITZ!Box 7530 QR";
+char pass[] = "";        
 
 // Allocate the JSON document
 //
@@ -94,14 +94,20 @@ void listen() {
         DeserializationError error = deserializeJson(doc, json);
 
         if (error) {
+          // No field
           Serial.print(F("deserializeJson() failed: "));
           Serial.println(error.f_str());
-          return;
+          isOk = false;
+        } else {
+          Serial.println("Light must be turned: " + doc["light"].as<String>());
+          isOk = true; 
         }
-        Serial.println("Light must be turned: " + doc["light"].as<String>());
+      } else {
+        // No body
+        isOk = false;
       }
-      isOk = true;
     } else {
+      // Wrong path
       isOk = false;
     }
 
