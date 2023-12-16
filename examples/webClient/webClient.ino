@@ -2,7 +2,7 @@
 #include <ArduinoJson.h>
 
 char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
-char pass[] = "06989642165939857128";    // your network password (use for WPA, or use as key for WEP)
+char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
 
 int status = WL_IDLE_STATUS;
 

@@ -1,7 +1,6 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
 
-///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
 char pass[] = "";        // your network password (use for WPA, or use as key for WEP)
 
@@ -16,9 +15,11 @@ int led =  LED_BUILTIN;
 int status = WL_IDLE_STATUS;
 WiFiServer server(8080);
 
+void listen();
+
 void setup() {
-  Serial.begin(9600);      // initialize serial communication
-  pinMode(led, OUTPUT);      // set the LED pin mode
+  Serial.begin(9600);
+  pinMode(led, OUTPUT);
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -39,22 +40,30 @@ void setup() {
 
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
-    // wait 10 seconds for connection:
-    // delay(10000);
   }
+
   server.begin();                           // start the web server on port 80
   printWifiStatus();                        // you're connected now, so print out the status
 }
 
 
 void loop() {
+  listen();  
+}
+
+void listen() {
   WiFiClient client = server.available();   // listen for incoming clients
   String json = "";
+  String header = "";
+  bool isOk = false;
+  String path = "";
+  String httpMethod = "";
 
   if (client) {                             // if you get a client,
     String currentLine = "";                // make a String to hold incoming data from the client
     while (client.connected() && client.available()) {            // loop while the client's connected
       char c = client.read();
+      header += c;
       if(c == '\n') {
         c = client.read();
         if(c == '\r') {
@@ -67,8 +76,41 @@ void loop() {
         }
       }
     }
-    // //Responds with 204 ok no content
-    client.println("HTTP/1.1 204 No Content");
+
+    if(header.length() > 0) {
+      int index = header.indexOf(" ", 0);
+      httpMethod = header.substring(0, index);
+      Serial.println(" Http method:" + httpMethod);
+
+      int index2 = header.indexOf(" ", index + 1);
+      path = header.substring(index + 1, index2);
+      Serial.println("API: " + path);
+    }
+
+    if(path.equalsIgnoreCase("/test")) {
+      if(json.length() > 0) {
+        // Serial.println("Request header was: " + header);
+        Serial.println("JSON request was: " + json);
+        DeserializationError error = deserializeJson(doc, json);
+
+        if (error) {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+          return;
+        }
+        Serial.println("Light must be turned: " + doc["light"].as<String>());
+      }
+      isOk = true;
+    } else {
+      isOk = false;
+    }
+
+    // //Responds with 204 ok no content or 400 bad request
+    if(isOk) {
+      client.println("HTTP/1.1 204 No Content");
+    } else {
+      client.println("HTTP/1.1 400 Bad request");
+    }
     client.println("Content-type: application/json");
     client.println();
     client.print("");
@@ -76,19 +118,6 @@ void loop() {
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
-
-    if(json.length() > 0) {
-      Serial.println("JSON response was: " + json);
-      DeserializationError error = deserializeJson(doc, json);
-
-      if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
-        return;
-      }
-
-      Serial.println("Light must be turned: " + doc["light"].as<String>());
-    }
   }
 }
 
