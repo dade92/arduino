@@ -29,7 +29,7 @@
 
 ///////please enter your sensitive data in the Secret tab/arduino_secrets.h
 char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
-char pass[] = "06989642165939857128";        // your network password (use for WPA, or use as key for WEP)
+char pass[] = "";        // your network password (use for WPA, or use as key for WEP)
 
 int led =  LED_BUILTIN;
 int status = WL_IDLE_STATUS;
