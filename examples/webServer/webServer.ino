@@ -20,7 +20,8 @@ int led = LED_BUILTIN;
 int status = WL_IDLE_STATUS;
 const String METHOD_NOT_ALLOWED = "HTTP/1.1 405 Method Not Allowed";
 const String BAD_REQUEST = "HTTP/1.1 400 Bad request";
-const String NO_CONTENT = "HTTP/1.1 204 No content";
+const String OK = "HTTP/1.1 200 OK";
+String lightStatus = "";
 WiFiServer server(8080);
 
 void listen();
@@ -95,6 +96,7 @@ void listen() {
       int index2 = header.indexOf(" ", index + 1);
       path = header.substring(index + 1, index2);
 
+      // REST mapping here
       if (path.equalsIgnoreCase("/test") && httpMethod.equalsIgnoreCase("POST")) {
         if (json.length() > 0) {
           // Serial.println("Request header was: " + header);
@@ -107,8 +109,9 @@ void listen() {
             Serial.println(error.f_str());
             httpResponse = BAD_REQUEST;
           } else {
-            Serial.println("Light must be turned: " + doc["light"].as<String>());
-            httpResponse = NO_CONTENT;
+            lightStatus = doc["light"].as<String>();
+            Serial.println("Light must be turned: " + lightStatus);
+            httpResponse = OK;
           }
         } else {
           // No body
@@ -125,9 +128,9 @@ void listen() {
     // Sends the final HTTP response
     client.println(httpResponse);
     client.println("Content-type: application/json");
+    client.println("Connection: close");
     client.println();
-    client.print("");
-    client.println();
+    client.print("{\"data\": \"" + lightStatus + "\"}");
     // close the connection:
     client.stop();
     Serial.println("client disconnected");
