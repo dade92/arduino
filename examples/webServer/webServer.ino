@@ -1,8 +1,13 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
+#include <EEPROM.h>
 
+// IMPORTANT wifi password is read from the EEPROM at startup.
+// Before launching this script, make sure to write it using the proper sketch in the
+// example folder!!!
+// Change the ssid too
 char ssid[] = "FRITZ!Box 7530 QR";
-char pass[] = "";        
+char pass[21];
 
 // Allocate the JSON document
 //
@@ -11,8 +16,11 @@ char pass[] = "";
 // Use arduinojson.org/v6/assistant to compute the capacity.
 StaticJsonDocument<100> doc;
 
-int led =  LED_BUILTIN;
+int led = LED_BUILTIN;
 int status = WL_IDLE_STATUS;
+const String METHOD_NOT_ALLOWED = "HTTP/1.1 405 Method Not Allowed";
+const String BAD_REQUEST = "HTTP/1.1 400 Bad request";
+const String NO_CONTENT = "HTTP/1.1 204 No content";
 WiFiServer server(8080);
 
 void listen();
@@ -21,11 +29,21 @@ void setup() {
   Serial.begin(9600);
   pinMode(led, OUTPUT);
 
+  for(int i = 0;i<20;i++) {
+    pass[i] = EEPROM.read(i);
+  }
+
+  pass[20] = '\0';
+
+  Serial.print("Wifi password is: ");
+  Serial.println(pass);
+
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
-    while (true);
+    while (true)
+      ;
   }
 
   String fv = WiFi.firmwareVersion();
@@ -36,40 +54,40 @@ void setup() {
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to Network named: ");
-    Serial.println(ssid);                   // print the network name (SSID);
+    Serial.println(ssid);  // print the network name (SSID);
 
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
   }
 
-  server.begin();                           // start the web server on port 80
-  printWifiStatus();                        // you're connected now, so print out the status
+  server.begin();     // start the web server on port 80
+  printWifiStatus();  // you're connected now, so print out the status
 }
 
 
 void loop() {
-  listen();  
+  listen();
 }
 
 void listen() {
-  WiFiClient client = server.available();   // listen for incoming clients
+  WiFiClient client = server.available();  // listen for incoming clients
   String json = "";
   String header = "";
-  bool isOk = false;
+  String httpResponse;
   String path = "";
   String httpMethod = "";
 
-  if (client) {                             // if you get a client,
-    String currentLine = "";                // make a String to hold incoming data from the client
-    while (client.connected() && client.available()) {            // loop while the client's connected
+  if (client) {                                         // if you get a client,
+    String currentLine = "";                            // make a String to hold incoming data from the client
+    while (client.connected() && client.available()) {  // loop while the client's connected
       char c = client.read();
       header += c;
-      if(c == '\n') {
+      if (c == '\n') {
         c = client.read();
-        if(c == '\r') {
+        if (c == '\r') {
           c = client.read();
           json += c;
-          while(c != '}') {
+          while (c != '}') {
             c = client.read();
             json += c;
           }
@@ -77,46 +95,41 @@ void listen() {
       }
     }
 
-    if(header.length() > 0) {
+    if (header.length() > 0) {
       int index = header.indexOf(" ", 0);
       httpMethod = header.substring(0, index);
-      Serial.println(" Http method:" + httpMethod);
-
       int index2 = header.indexOf(" ", index + 1);
       path = header.substring(index + 1, index2);
-      Serial.println("API: " + path);
-    }
+      
+      if (path.equalsIgnoreCase("/test") && httpMethod.equalsIgnoreCase("POST")) {
+        if (json.length() > 0) {
+          // Serial.println("Request header was: " + header);
+          Serial.println("JSON request was: " + json);
+          DeserializationError error = deserializeJson(doc, json);
 
-    if(path.equalsIgnoreCase("/test")) {
-      if(json.length() > 0) {
-        // Serial.println("Request header was: " + header);
-        Serial.println("JSON request was: " + json);
-        DeserializationError error = deserializeJson(doc, json);
-
-        if (error) {
-          // No field
-          Serial.print(F("deserializeJson() failed: "));
-          Serial.println(error.f_str());
-          isOk = false;
+          if (error) {
+            // No field
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+            httpResponse = BAD_REQUEST;
+          } else {
+            Serial.println("Light must be turned: " + doc["light"].as<String>());
+            httpResponse = NO_CONTENT;
+          }
         } else {
-          Serial.println("Light must be turned: " + doc["light"].as<String>());
-          isOk = true; 
+          // No body
+          httpResponse = BAD_REQUEST;
         }
       } else {
-        // No body
-        isOk = false;
+        // Wrong path
+        httpResponse = METHOD_NOT_ALLOWED;
       }
     } else {
-      // Wrong path
-      isOk = false;
+      httpResponse = BAD_REQUEST;
     }
 
-    // //Responds with 204 ok no content or 400 bad request
-    if(isOk) {
-      client.println("HTTP/1.1 204 No Content");
-    } else {
-      client.println("HTTP/1.1 400 Bad request");
-    }
+    // Sends the final HTTP response
+    client.println(httpResponse);
     client.println("Content-type: application/json");
     client.println();
     client.print("");

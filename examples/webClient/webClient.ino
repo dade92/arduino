@@ -1,8 +1,9 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
+#include<EEPROM.h>
 
 char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
-char pass[] = "";    // your network password (use for WPA, or use as key for WEP)
+char pass[21];    // your network password (use for WPA, or use as key for WEP)
 
 int status = WL_IDLE_STATUS;
 
@@ -44,10 +45,6 @@ void setup() {
   pinMode(led, OUTPUT);
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-  while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
-  }
-  randomSeed(analogRead(0));
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -60,6 +57,12 @@ void setup() {
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
     Serial.println("Please upgrade the firmware");
   }
+
+  for(int i = 0;i<20; i++) {
+    pass[i] = EEPROM.read(i);
+  }
+
+  pass[20] = '\0';
 
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
@@ -83,9 +86,9 @@ void loop() {
   // read_GET_response();
   read_POST_response();
   
-  // if (millis() - lastConnectionTime > postingInterval) {
-  //   httpRequest();
-  // }
+  if (millis() - lastConnectionTime > postingInterval) {
+    httpRequest();
+  }
 
   if(millis() - lastBlink > blinkTime) {
     ledStatus = !ledStatus;
