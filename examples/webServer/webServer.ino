@@ -32,9 +32,6 @@ void setup() {
 
   readWifiPassword();
 
-  Serial.print("Wifi password is: ");
-  Serial.println(pass);
-
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
