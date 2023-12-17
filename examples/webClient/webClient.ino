@@ -1,9 +1,9 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
-#include<EEPROM.h>
+#include <EEPROM.h>
 
-char ssid[] = "FRITZ!Box 7530 QR";        // your network SSID (name)
-char pass[21];    // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "FRITZ!Box 7530 QR";  // your network SSID (name)
+char pass[21];                      // your network password (use for WPA, or use as key for WEP)
 
 int status = WL_IDLE_STATUS;
 
@@ -17,7 +17,7 @@ unsigned long lastConnectionTime = 0;
 const unsigned long postingInterval = 10L * 1000L;
 unsigned long lastBlink = 0;
 const int blinkTime = 500;
-int led =  LED_BUILTIN;
+int led = LED_BUILTIN;
 bool ledStatus = false;
 
 void httpRequest();
@@ -28,18 +28,19 @@ void performPOST(int param);
 // can see by the continuing blinking led
 void read_GET_response();
 void read_POST_response();
+void readWifiPassword();
 
-  // Allocate the JSON document
-  //
-  // Inside the brackets, 200 is the capacity of the memory pool in bytes.
-  // Don't forget to change this value to match your JSON document.
-  // Use arduinojson.org/v6/assistant to compute the capacity.
-  StaticJsonDocument<100> doc;
+// Allocate the JSON document
+//
+// Inside the brackets, 200 is the capacity of the memory pool in bytes.
+// Don't forget to change this value to match your JSON document.
+// Use arduinojson.org/v6/assistant to compute the capacity.
+StaticJsonDocument<100> doc;
 
-  // StaticJsonDocument<N> allocates memory on the stack, it can be
-  // replaced by DynamicJsonDocument which allocates in the heap.
-  //
-  // DynamicJsonDocument doc();
+// StaticJsonDocument<N> allocates memory on the stack, it can be
+// replaced by DynamicJsonDocument which allocates in the heap.
+//
+// DynamicJsonDocument doc();
 
 void setup() {
   pinMode(led, OUTPUT);
@@ -50,19 +51,14 @@ void setup() {
   if (WiFi.status() == WL_NO_MODULE) {
     Serial.println("Communication with WiFi module failed!");
     // don't continue
-    while (true);
+    while (true)
+      ;
   }
 
   String fv = WiFi.firmwareVersion();
   if (fv < WIFI_FIRMWARE_LATEST_VERSION) {
     Serial.println("Please upgrade the firmware");
   }
-
-  for(int i = 0;i<20; i++) {
-    pass[i] = EEPROM.read(i);
-  }
-
-  pass[20] = '\0';
 
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
@@ -85,17 +81,16 @@ void loop() {
 
   // read_GET_response();
   read_POST_response();
-  
+
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
   }
 
-  if(millis() - lastBlink > blinkTime) {
+  if (millis() - lastBlink > blinkTime) {
     ledStatus = !ledStatus;
     digitalWrite(led, ledStatus);
     lastBlink = millis();
   }
-
 }
 
 void read_GET_response() {
@@ -104,12 +99,12 @@ void read_GET_response() {
   while (client.available()) {
     /* actual data reception */
     char c = client.read();
-    if(c == '\n') {
+    if (c == '\n') {
       c = client.read();
-      if(c == '\r') {
+      if (c == '\r') {
         c = client.read();
         json += c;
-        while(c != '}') {
+        while (c != '}') {
           c = client.read();
           json += c;
         }
@@ -117,7 +112,7 @@ void read_GET_response() {
     }
   }
 
-  if(json.length() > 0) {
+  if (json.length() > 0) {
     Serial.println("JSON response was: " + json);
     DeserializationError error = deserializeJson(doc, json);
 
@@ -138,12 +133,12 @@ void read_POST_response() {
   while (client.available()) {
     /* actual data reception */
     char c = client.read();
-    if(c == '\n') {
+    if (c == '\n') {
       c = client.read();
-      if(c == '\r') {
+      if (c == '\r') {
         c = client.read();
         json += c;
-        while(c != '}') {
+        while (c != '}') {
           c = client.read();
           json += c;
         }
@@ -151,7 +146,7 @@ void read_POST_response() {
     }
   }
 
-  if(json.length() > 0) {
+  if (json.length() > 0) {
     Serial.println("JSON response was: " + json);
     DeserializationError error = deserializeJson(doc, json);
 
@@ -179,19 +174,17 @@ void httpRequest() {
 void performGET() {
   if (client.connect(server, 8080)) {
     Serial.println("connecting...");
-    
+
     client.println("GET /findUser?name=Francesca HTTP/1.1");
     client.println("Host: example.org");
     client.println("User-Agent: ArduinoWiFi/1.1");
     client.println("Connection: close");
     client.println();
-    
+
     lastConnectionTime = millis();
   } else {
     Serial.println("connection failed");
   }
-
-  
 }
 
 void performPOST(int param) {
@@ -227,4 +220,11 @@ void printWifiStatus() {
   Serial.print("signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+}
+
+void readWifiPassword() {
+  for (int i = 0; i < 20; i++) {
+    pass[i] = EEPROM.read(i);
+  }
+  pass[20] = '\0';
 }

@@ -24,16 +24,13 @@ const String NO_CONTENT = "HTTP/1.1 204 No content";
 WiFiServer server(8080);
 
 void listen();
+void readWifiPassword();
 
 void setup() {
   Serial.begin(9600);
   pinMode(led, OUTPUT);
 
-  for(int i = 0;i<20;i++) {
-    pass[i] = EEPROM.read(i);
-  }
-
-  pass[20] = '\0';
+  readWifiPassword();
 
   Serial.print("Wifi password is: ");
   Serial.println(pass);
@@ -100,7 +97,7 @@ void listen() {
       httpMethod = header.substring(0, index);
       int index2 = header.indexOf(" ", index + 1);
       path = header.substring(index + 1, index2);
-      
+
       if (path.equalsIgnoreCase("/test") && httpMethod.equalsIgnoreCase("POST")) {
         if (json.length() > 0) {
           // Serial.println("Request header was: " + header);
@@ -159,4 +156,11 @@ void printWifiStatus() {
   Serial.print("To communicate to this device, use the API: http://");
   Serial.print(ip);
   Serial.print(":8080/");
+}
+
+void readWifiPassword() {
+  for (int i = 0; i < 20; i++) {
+    pass[i] = EEPROM.read(i);
+  }
+  pass[20] = '\0';
 }
