@@ -1,9 +1,18 @@
+// Run along with server node-example
+// IMPORTANT: these read GET and POST method are the same, only thing different are the json fields to be retrieved
+// This code seems to work even in case of long responses by the server, as you
+// can see by the continuing blinking led
+
+// Wifi password is read from the EEPROM at startup.
+// Before launching this script, make sure to write it using the proper sketch in the
+// example folder!!!
+// Change the ssid too
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
 #include <EEPROM.h>
 
-char ssid[] = "FRITZ!Box 7530 QR";  // your network SSID (name)
-char pass[21];                      // your network password (use for WPA, or use as key for WEP)
+char ssid[] = "FRITZ!Box 7530 QR";
+char pass[21];
 
 int status = WL_IDLE_STATUS;
 
@@ -23,9 +32,6 @@ bool ledStatus = false;
 void httpRequest();
 void performGET();
 void performPOST(int param);
-// IMPORTANT: these read method are the same, only thing different are the json fields to be retrieved
-// This code seems to work even in case of long responses by the server, as you
-// can see by the continuing blinking led
 void read_GET_response();
 void read_POST_response();
 void readWifiPassword();
@@ -44,7 +50,7 @@ StaticJsonDocument<100> doc;
 
 void setup() {
   pinMode(led, OUTPUT);
-  //Initialize serial and wait for port to open:
+
   Serial.begin(9600);
 
   // check for the WiFi module:
@@ -66,9 +72,6 @@ void setup() {
     Serial.println(ssid);
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
-
-    // wait 10 seconds for connection:
-    //delay(10000);
   }
   // you're connected now, so print out the status:
   printWifiStatus();
