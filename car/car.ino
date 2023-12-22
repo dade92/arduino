@@ -87,8 +87,8 @@ void loop() {
     forward();
   } else {
     stop(LONG_TIME);
-    backward(LONG_TIME);
-    chooseWhereToGo();
+    // backward(LONG_TIME);
+    // chooseWhereToGo();
   }
 }
 
