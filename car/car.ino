@@ -3,17 +3,17 @@
 #include <Servo.h>
 #include <HCSR04.h>
 
-#define VERY_SHORT_TIME 250
-#define SHORT_TIME 500
-#define LONG_TIME 800
-#define VERY_LONG_TIME 1200
+#define VERY_SHORT_TIME         250
+#define SHORT_TIME              500
+#define LONG_TIME               800
+#define VERY_LONG_TIME          1200
 
-#define LEFT_FORWARD 4   //  white wire
-#define LEFT_BACKWARD 11  // blue wire
-#define RIGHT_FORWARD 13  // yellow wire
-#define RIGHT_BACKWARD 12 // green wire
-#define TRIG 3            // orange wire
-#define ECHO 2            // yellow wire
+#define LEFT_FORWARD            4       //  white wire
+#define LEFT_BACKWARD           11      // blue wire
+#define RIGHT_FORWARD           13      // yellow wire
+#define RIGHT_BACKWARD          12      // green wire
+#define TRIG                    3       // orange wire
+#define ECHO                    2       // yellow wire
 // #define EN_RIGHT 6
 // #define EN_LEFT 5
 
@@ -89,7 +89,6 @@ void loop() {
     stop(LONG_TIME);
     backward(LONG_TIME);
     chooseWhereToGo();
-    stop(LONG_TIME);
   }
 }
 
@@ -115,6 +114,7 @@ void backward(int time) {
   digitalWrite(RIGHT_FORWARD, LOW);
   digitalWrite(RIGHT_BACKWARD, HIGH);
   delay(time);
+  stop(time);
 }
 
 void left(int time) {
@@ -124,6 +124,7 @@ void left(int time) {
   digitalWrite(RIGHT_BACKWARD, LOW);
   lastTurn = LEFT;
   delay(time);
+  stop(time);
 }
 
 void right(int time) {
@@ -133,6 +134,17 @@ void right(int time) {
   digitalWrite(RIGHT_BACKWARD, LOW);
   lastTurn = RIGHT;
   delay(time);
+  stop(time);
+}
+
+void stop(int time) {
+  digitalWrite(LEFT_FORWARD, LOW);
+  digitalWrite(LEFT_BACKWARD, LOW);
+  digitalWrite(RIGHT_FORWARD, LOW);
+  digitalWrite(RIGHT_BACKWARD, LOW);
+  delay(time);
+  // rightMotorSpeed = 0;
+  // leftMotorSpeed = 0;
 }
 
 // void rotateTillNoObstacle() {
@@ -200,15 +212,6 @@ void right(int time) {
 //   }
 //   lastTurn = RIGHT;
 // }
-
-void stop(int time) {
-  digitalWrite(LEFT_FORWARD, LOW);
-  digitalWrite(LEFT_BACKWARD, LOW);
-  digitalWrite(RIGHT_FORWARD, LOW);
-  digitalWrite(RIGHT_BACKWARD, LOW);
-  // rightMotorSpeed = 0;
-  // leftMotorSpeed = 0;
-}
 
 // void smoothlyLookRight() {
 //   for(; watch>=LOOK_RIGHT; watch--) {
