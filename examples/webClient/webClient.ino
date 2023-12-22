@@ -10,6 +10,9 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
 #include <EEPROM.h>
+#include "Arduino_LED_Matrix.h"
+
+ArduinoLEDMatrix matrix;
 
 char ssid[] = "FRITZ!Box 7530 QR";
 char pass[21];
@@ -28,6 +31,13 @@ unsigned long lastBlink = 0;
 const int blinkTime = 500;
 int led = LED_BUILTIN;
 bool ledStatus = false;
+
+const uint32_t CONN_OK[] = {
+    0x73453873,
+    0x40000000,
+    0x0
+};
+
 
 void httpRequest();
 void performGET();
@@ -52,6 +62,7 @@ void setup() {
   pinMode(led, OUTPUT);
 
   Serial.begin(9600);
+  matrix.begin();
 
   // check for the WiFi module:
   if (WiFi.status() == WL_NO_MODULE) {
@@ -66,6 +77,8 @@ void setup() {
     Serial.println("Please upgrade the firmware");
   }
 
+  readWifiPassword();
+
   // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
@@ -73,6 +86,7 @@ void setup() {
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
   }
+  matrix.loadFrame(CONN_OK);
   // you're connected now, so print out the status:
   printWifiStatus();
 }
