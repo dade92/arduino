@@ -43,7 +43,7 @@ UltraSonicDistanceSensor hc(TRIG, ECHO);
 /**
   IMPORTANT: 
     Batteries supply motors AND arduino => arduino must be linked in the Vin / GND
-    
+
     Left motor is linked at the bottom ("supply side")
     Right motor is linked on top ("non supply side")
     Both motors are linked with pins poiting outside
@@ -87,9 +87,52 @@ void loop() {
     forward();
   } else {
     stop(LONG_TIME);
-    backward(SHORT_TIME);
-    left(SHORT_TIME);
+    backward(LONG_TIME);
+    chooseWhereToGo();
+    stop(LONG_TIME);
   }
+}
+
+void chooseWhereToGo() {
+  random(2) == 0 ? left(LONG_TIME) : right(LONG_TIME);
+}
+
+void measureDistance() {
+  delay(500);
+  distance = hc.measureDistanceCm();
+}
+
+void forward() {
+  digitalWrite(LEFT_FORWARD, HIGH);
+  digitalWrite(LEFT_BACKWARD, LOW);
+  digitalWrite(RIGHT_FORWARD, HIGH);
+  digitalWrite(RIGHT_BACKWARD, LOW);
+}
+
+void backward(int time) {
+  digitalWrite(LEFT_FORWARD, LOW);
+  digitalWrite(LEFT_BACKWARD, HIGH);
+  digitalWrite(RIGHT_FORWARD, LOW);
+  digitalWrite(RIGHT_BACKWARD, HIGH);
+  delay(time);
+}
+
+void left(int time) {
+  digitalWrite(LEFT_FORWARD, LOW);
+  digitalWrite(LEFT_BACKWARD, LOW);
+  digitalWrite(RIGHT_FORWARD, HIGH);
+  digitalWrite(RIGHT_BACKWARD, LOW);
+  lastTurn = LEFT;
+  delay(time);
+}
+
+void right(int time) {
+  digitalWrite(LEFT_FORWARD, HIGH);
+  digitalWrite(LEFT_BACKWARD, LOW);
+  digitalWrite(RIGHT_FORWARD, LOW);
+  digitalWrite(RIGHT_BACKWARD, LOW);
+  lastTurn = RIGHT;
+  delay(time);
 }
 
 // void rotateTillNoObstacle() {
@@ -114,14 +157,10 @@ void loop() {
 //   return distance < THRESHOLD;
 // }
 
-void chooseRandomlyWhereToGo() {
-  random(0,2) == 0 ? left(SHORT_TIME) : right(SHORT_TIME);
-}
+// void chooseRandomlyWhereToGo() {
+//   random(0,2) == 0 ? left() : right(SHORT_TIME);
+// }
 
-int measureDistance() {
-  delay(60);
-  distance = hc.measureDistanceCm();
-}
 
 // float measureAngularSpeed() {
 //   float angSpeed = mpu6050.getGyroZ();
@@ -134,40 +173,6 @@ int measureDistance() {
 //   return mpu6050.getAngleZ();
 // }
 
-void forward() {
-  digitalWrite(LEFT_FORWARD, HIGH);
-  digitalWrite(LEFT_BACKWARD, LOW);
-  digitalWrite(RIGHT_FORWARD, HIGH);
-  digitalWrite(RIGHT_BACKWARD, LOW);
-  // if(angle < targetAngle - 5) {
-  //   // it's turning RIGHT
-  //   rightMotorSpeed++;
-  //   leftMotorSpeed--;
-  // } else if(angle > targetAngle + 5) {
-  //   //it's turning LEFT
-  //   rightMotorSpeed--;
-  //   leftMotorSpeed++;
-  // }
-  // rightMotorSpeed = constrain(rightMotorSpeed, 0, MAX_SPEED);
-  // leftMotorSpeed = constrain(leftMotorSpeed, 0, MAX_SPEED);
-}
-
-void backward(int time) {
-  digitalWrite(LEFT_FORWARD, LOW);
-  digitalWrite(LEFT_BACKWARD, HIGH);
-  digitalWrite(RIGHT_FORWARD, LOW);
-  digitalWrite(RIGHT_BACKWARD, HIGH);
-  delay(time);
-}
-
-void left(int time) {
-  digitalWrite(LEFT_FORWARD, LOW);
-  digitalWrite(LEFT_BACKWARD, LOW);
-  digitalWrite(RIGHT_FORWARD, HIGH);
-  digitalWrite(RIGHT_BACKWARD, LOW);
-  lastTurn = LEFT;
-  delay(time);
-}
 
 // void left90Degrees() {
 //   float actualAngle = measureAngle();
@@ -182,14 +187,6 @@ void left(int time) {
 //   lastTurn = LEFT;
 // }
 
-void right(int time) {
-  digitalWrite(LEFT_FORWARD, HIGH);
-  digitalWrite(LEFT_BACKWARD, LOW);
-  digitalWrite(RIGHT_FORWARD, LOW);
-  digitalWrite(RIGHT_BACKWARD, LOW);
-  lastTurn = RIGHT;
-  delay(time);
-}
 
 // void right90Degrees() {
 //   float actualAngle = measureAngle();
