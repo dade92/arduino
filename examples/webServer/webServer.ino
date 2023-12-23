@@ -1,6 +1,7 @@
 #include "WiFiS3.h"
 #include <ArduinoJson.h>
 #include <EEPROM.h>
+#include "Arduino_LED_Matrix.h"
 
 // IMPORTANT wifi password is read from the EEPROM at startup.
 // Before launching this script, make sure to write it using the proper sketch in the
@@ -8,6 +9,13 @@
 // Change the ssid too
 char ssid[] = "FRITZ!Box 7530 QR";
 char pass[21];
+ArduinoLEDMatrix matrix;
+const uint32_t CONN_OK[] = {
+    0x73453873,
+    0x40000000,
+    0x0
+};
+
 
 // Allocate the JSON document
 //
@@ -57,6 +65,7 @@ void setup() {
 
   server.begin();     // start the web server on port 80
   printWifiStatus();  // you're connected now, so print out the status
+  matrix.loadFrame(CONN_OK);
 }
 
 
@@ -79,12 +88,19 @@ void listen() {
       header += c;
       if (c == '\n') {
         c = client.read();
+        header += c;
         if (c == '\r') {
           c = client.read();
           json += c;
-          while (c != '}') {
-            c = client.read();
+          c = client.read();
+          if(c != '{') {
+            break;
+          } else {
             json += c;
+            while (c != '}') {
+              c = client.read();
+              json += c;
+            }
           }
         }
       }
@@ -95,11 +111,11 @@ void listen() {
       httpMethod = header.substring(0, index);
       int index2 = header.indexOf(" ", index + 1);
       path = header.substring(index + 1, index2);
-
+      Serial.println("Request header was: " + header);
+      
       // REST mapping here
       if (path.equalsIgnoreCase("/test") && httpMethod.equalsIgnoreCase("POST")) {
         if (json.length() > 0) {
-          // Serial.println("Request header was: " + header);
           Serial.println("JSON request was: " + json);
           DeserializationError error = deserializeJson(doc, json);
 
