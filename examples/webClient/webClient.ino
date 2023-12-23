@@ -164,7 +164,6 @@ void read_GET_response() {
   }
 }
 
-//TODO change the post parsing accordingly if the GET parsing is working
 void read_POST_response() {
   String json = "";
   String header = "";
