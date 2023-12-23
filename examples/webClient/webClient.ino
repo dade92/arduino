@@ -95,8 +95,8 @@ void loop() {
   // send it out the serial port.  This is for debugging
   // purposes only:
 
-  read_GET_response();
-  // read_POST_response();
+  // read_GET_response();
+  read_POST_response();
 
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
@@ -167,34 +167,55 @@ void read_GET_response() {
 //TODO change the post parsing accordingly if the GET parsing is working
 void read_POST_response() {
   String json = "";
+  String header = "";
+  String httpResponse = "";
+  String httpVersion = "";
 
   while (client.available()) {
     /* actual data reception */
     char c = client.read();
+    header += c;
     if (c == '\n') {
       c = client.read();
+      header += c;
       if (c == '\r') {
         c = client.read();
         json += c;
-        while (c != '}') {
-          c = client.read();
+        c = client.read();
+        if (c != '{') {
+          break;
+        } else {
           json += c;
+          while (c != '}') {
+            c = client.read();
+            json += c;
+          }
         }
       }
     }
   }
 
-  if (json.length() > 0) {
-    Serial.println("JSON response was: " + json);
-    DeserializationError error = deserializeJson(doc, json);
+  if (header.length() > 0) {
+    int index = header.indexOf(" ", 0);
+    httpVersion = header.substring(0, index);
+    int index2 = header.indexOf(" ", index + 1);
+    httpResponse = header.substring(index + 1, index2);
 
-    if (error) {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
+    if (httpResponse == "200") {
+      if (json.length() > 0) {
+        Serial.println("JSON response was: " + json);
+        DeserializationError error = deserializeJson(doc, json);
+
+        if (error) {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+          return;
+        }
+        Serial.println("Number was: " + doc["yourNumber"].as<String>());
+      }
+    } else {
+      Serial.println("Http response was " + httpResponse);
     }
-
-    Serial.println("Number was: " + doc["yourNumber"].as<String>());
   }
 }
 
@@ -204,9 +225,9 @@ void httpRequest() {
   // This will free the socket on the NINA module
   client.stop();
 
-  performGET();
+  // performGET();
 
-  // performPOST(random(300));
+  performPOST(random(300));
 }
 
 void performGET() {
