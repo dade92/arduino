@@ -3,6 +3,9 @@
 #include <EEPROM.h>
 #include "Arduino_LED_Matrix.h"
 
+#define RED_LIGHT 7
+#define GREEN_LIGHT 6
+
 // IMPORTANT wifi password is read from the EEPROM at startup.
 // Before launching this script, make sure to write it using the proper sketch in the
 // example folder!!!
@@ -17,19 +20,20 @@ const uint32_t CONN_OK[] = {
 };
 
 
+
 // Allocate the JSON document
-//
+// TODO: OPTIMIZE ALLOCATION
+
 // Inside the brackets, 200 is the capacity of the memory pool in bytes.
 // Don't forget to change this value to match your JSON document.
 // Use arduinojson.org/v6/assistant to compute the capacity.
 StaticJsonDocument<100> doc;
 
-int led = LED_BUILTIN;
 int status = WL_IDLE_STATUS;
 const String METHOD_NOT_ALLOWED = "HTTP/1.1 405 Method Not Allowed";
 const String BAD_REQUEST = "HTTP/1.1 400 Bad request";
 const String OK = "HTTP/1.1 200 OK";
-String lightStatus = "";
+String lightStatus = "OFF";
 WiFiServer server(8080);
 
 void listen();
@@ -37,7 +41,9 @@ void readWifiPassword();
 
 void setup() {
   Serial.begin(9600);
-  pinMode(led, OUTPUT);
+  matrix.begin();
+  pinMode(RED_LIGHT, OUTPUT);
+  pinMode(GREEN_LIGHT, OUTPUT);
 
   readWifiPassword();
 
@@ -54,10 +60,9 @@ void setup() {
     Serial.println("Please upgrade the firmware");
   }
 
-  // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to Network named: ");
-    Serial.println(ssid);  // print the network name (SSID);
+    Serial.println(ssid);
 
     // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
     status = WiFi.begin(ssid, pass);
@@ -71,6 +76,12 @@ void setup() {
 
 void loop() {
   listen();
+
+  if(lightStatus == "OFF") {
+    digitalWrite(RED_LIGHT, LOW);
+  } else if(lightStatus == "ON") {
+    digitalWrite(RED_LIGHT, HIGH);
+  }
 }
 
 void listen() {
@@ -81,9 +92,9 @@ void listen() {
   String path = "";
   String httpMethod = "";
 
-  if (client) {                                         // if you get a client,
-    String currentLine = "";                            // make a String to hold incoming data from the client
-    while (client.connected() && client.available()) {  // loop while the client's connected
+  if (client) {
+    // HTTP REQUEST PARSING
+    while (client.connected() && client.available()) {
       char c = client.read();
       header += c;
       if (c == '\n') {
@@ -112,7 +123,7 @@ void listen() {
       int index2 = header.indexOf(" ", index + 1);
       path = header.substring(index + 1, index2);
       Serial.println("Request header was: " + header);
-      
+
       // REST mapping here
       if (path.equalsIgnoreCase("/test") && httpMethod.equalsIgnoreCase("POST")) {
         if (json.length() > 0) {
@@ -126,7 +137,6 @@ void listen() {
             httpResponse = BAD_REQUEST;
           } else {
             lightStatus = doc["light"].as<String>();
-            Serial.println("Light must be turned: " + lightStatus);
             httpResponse = OK;
           }
         } else {
