@@ -14,9 +14,9 @@ char ssid[] = "FRITZ!Box 7530 QR";
 char pass[21];
 ArduinoLEDMatrix matrix;
 const uint32_t CONN_OK[] = {
-    0x73453873,
-    0x40000000,
-    0x0
+  0x73453873,
+  0x40000000,
+  0x0
 };
 
 
@@ -77,9 +77,9 @@ void setup() {
 void loop() {
   listen();
 
-  if(lightStatus == "OFF") {
+  if (lightStatus == "OFF") {
     digitalWrite(RED_LIGHT, LOW);
-  } else if(lightStatus == "ON") {
+  } else if (lightStatus == "ON") {
     digitalWrite(RED_LIGHT, HIGH);
   }
 }
@@ -104,7 +104,7 @@ void listen() {
           c = client.read();
           json += c;
           c = client.read();
-          if(c != '{') {
+          if (c != '{') {
             break;
           } else {
             json += c;
