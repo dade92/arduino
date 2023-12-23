@@ -33,9 +33,9 @@ int led = LED_BUILTIN;
 bool ledStatus = false;
 
 const uint32_t CONN_OK[] = {
-    0x73453873,
-    0x40000000,
-    0x0
+  0x73453873,
+  0x40000000,
+  0x0
 };
 
 
@@ -79,7 +79,6 @@ void setup() {
 
   readWifiPassword();
 
-  // attempt to connect to WiFi network:
   while (status != WL_CONNECTED) {
     Serial.print("Attempting to connect to SSID: ");
     Serial.println(ssid);
@@ -96,8 +95,8 @@ void loop() {
   // send it out the serial port.  This is for debugging
   // purposes only:
 
-  // read_GET_response();
-  read_POST_response();
+  read_GET_response();
+  // read_POST_response();
 
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
@@ -112,38 +111,60 @@ void loop() {
 
 void read_GET_response() {
   String json = "";
+  String header = "";
+  String httpResponse = "";
+  String httpVersion = "";
 
   while (client.available()) {
     /* actual data reception */
     char c = client.read();
+    header += c;
     if (c == '\n') {
       c = client.read();
+      header += c;
       if (c == '\r') {
         c = client.read();
         json += c;
-        while (c != '}') {
-          c = client.read();
+        c = client.read();
+        if (c != '{') {
+          break;
+        } else {
           json += c;
+          while (c != '}') {
+            c = client.read();
+            json += c;
+          }
         }
       }
     }
   }
 
-  if (json.length() > 0) {
-    Serial.println("JSON response was: " + json);
-    DeserializationError error = deserializeJson(doc, json);
+  if (header.length() > 0) {
+    int index = header.indexOf(" ", 0);
+    httpVersion = header.substring(0, index);
+    int index2 = header.indexOf(" ", index + 1);
+    httpResponse = header.substring(index + 1, index2);
+    if (httpResponse == "200") {
+      if (json.length() > 0) {
+        Serial.println("JSON response was: " + json);
+        DeserializationError error = deserializeJson(doc, json);
 
-    if (error) {
-      Serial.print(F("deserializeJson() failed: "));
-      Serial.println(error.f_str());
-      return;
+        if (error) {
+          Serial.print(F("deserializeJson() failed: "));
+          Serial.println(error.f_str());
+          return;
+        }
+
+        Serial.println("User was: " + doc["name"].as<String>());
+        Serial.println("Age was: " + String(doc["age"].as<int>()));
+      }
+    } else {
+      Serial.println("Server answered with " + httpResponse);
     }
-
-    Serial.println("User was: " + doc["name"].as<String>());
-    Serial.println("Age was: " + String(doc["age"].as<int>()));
   }
 }
 
+//TODO change the post parsing accordingly if the GET parsing is working
 void read_POST_response() {
   String json = "";
 
@@ -183,16 +204,16 @@ void httpRequest() {
   // This will free the socket on the NINA module
   client.stop();
 
-  // performGET();
+  performGET();
 
-  performPOST(random(300));
+  // performPOST(random(300));
 }
 
 void performGET() {
   if (client.connect(server, 8080)) {
     Serial.println("connecting...");
 
-    client.println("GET /findUser?name=Francesca HTTP/1.1");
+    client.println("GET /findUser?name=Carlos HTTP/1.1");
     client.println("Host: example.org");
     client.println("User-Agent: ArduinoWiFi/1.1");
     client.println("Connection: close");
